@@ -2,22 +2,25 @@
 #include <fstream>
 #include <iomanip>
 #include <string>
-
+#include <cstdlib>
+#include <cstring>
+#include <vector>
+#include <algorithm>
 using namespace std;
 
-// Base class to handle marks
+class Subject;
 class Marks {
 public:
-    float course_mark[3];  // Array to hold marks for theory, IT, and term work
-    string type_of_marks[3] = {"Theory", "IT", "Term Work"};
-    float total_max_marks;  // Maximum total marks for the subject
+    int course_mark[7];  // Array to hold marks for theory, IT, and term work
+    string type_of_marks[7] = {"Theory", "IT", "Term Work","Practical","Oral","Grade","Grade Point"};  // Types of marks
+    int total_max_marks,total_marks_obtained;  // Maximum total marks for the subject
 
     void input_marks() {
         cout << "Enter the maximum total marks for the subject: ";
         cin >> total_max_marks;
 
-        float total_marks_obtained = 0;
-        for (int i = 0; i < 3; i++) {
+        total_marks_obtained = 0;
+        for (int i = 0; i <5;  i++) {
             cout << "Enter marks obtained in " << type_of_marks[i] << ": ";
             cin >> course_mark[i];
             total_marks_obtained += course_mark[i];
@@ -26,7 +29,7 @@ public:
         while (total_marks_obtained > total_max_marks) {
             cout << "Invalid! The total marks cannot exceed " << total_max_marks << ". Enter again:\n";
             total_marks_obtained = 0;
-            for (int i = 0; i < 3; i++) {
+            for (int i = 0; i < 5; i++) {
                 cout << "Enter marks obtained in " << type_of_marks[i] << ": ";
                 cin >> course_mark[i];
                 total_marks_obtained += course_mark[i];
@@ -46,7 +49,8 @@ public:
 
     float getTotalMarksObtained() const {
         float total_obtained = 0;
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 5; i++) {
+            if(course_mark[i]>=0)
             total_obtained += course_mark[i];
         }
         return total_obtained;
@@ -59,10 +63,12 @@ public:
     string name;
     string code;
     int credits;
+    int GradePoint;
+    char grade[2];
 
     Subject() : credits(0), name("undefined"), code("undefined") {}
 
-    void inputSubject() {
+    int inputSubject() {
         cout << "Enter course name: ";
         cin.ignore();
         getline(cin, name);
@@ -71,8 +77,44 @@ public:
         cout << "Enter credits for the subject: ";
         cin >> credits;
         input_marks();
+        gradePoint(total_marks_obtained);
+        return credits;
     }
-
+    void gradePoint(float mark) {
+        float per = (mark/total_max_marks)*100;
+        if(per>=90){
+            GradePoint=10;
+            strcpy(grade,"O");
+        }
+        else if(per>=80){
+            GradePoint=9;
+            strcpy(grade,"A+");
+        }
+        else if(per>=70){
+            GradePoint=8;
+            strcpy(grade,"A");
+        }
+        else if(per>=60){
+            GradePoint=7;
+            strcpy(grade,"B");
+        }
+        else if(per>=50){
+            GradePoint=6;
+            strcpy(grade,"C");
+        }
+        else if(per>=40){
+            GradePoint=5;
+            strcpy(grade,"D");
+        }
+        else if(per>=30){
+            GradePoint=4;
+            strcpy(grade,"E");
+        }
+        else{
+            GradePoint=0;
+            strcpy(grade,"F");
+        }
+    }
     void displaySubject() const {
         cout << "Subject: " << name << " (Code: " << code << ")" << endl;
         display_marks();
@@ -83,11 +125,11 @@ public:
 // Class to represent a semester
 class Semester {
 public:
-    int subjectCount;
+    int subjectCount,totalcredits;
     string semesterName;
     Subject subjects[10];  // Assuming a maximum of 10 subjects per semester
 
-    Semester() : subjectCount(0) {}
+    Semester() : subjectCount(0) , totalcredits(0) {}
 
     void inputSemesterDetails(const string& semName) {
         semesterName = semName;
@@ -95,7 +137,7 @@ public:
         cin >> subjectCount;
         for (int i = 0; i < subjectCount; i++) {
             cout << "\nEntering details for subject " << (i + 1) << ":\n";
-            subjects[i].inputSubject();
+            totalcredits+=subjects[i].inputSubject();
         }
     }
 
@@ -146,71 +188,81 @@ public:
     }
 
     void displayStudentDetails() const {
-        cout << setw(200) << setfill('_') << "" << endl; // line
-        cout << setfill(' ') << "|" << setw(108) << "\e[1mGovernment of Goa\e[0m" << setw(99) << "|" << endl; //text middle
-        cout << left << "|" << setw(199) << right << "|" << endl; //free
-        cout << setfill(' ') << left << "|" << setw(113) << "\e[1mGoa College Of Engineering\e[0m" << setw(94) << right << "|" << endl; //text middle
-        cout << setfill(' ') << "|" << setw(110) << "\e[1mFarmaguddi Ponda Goa\e[0m" << setw(97) << "|" << endl; //text middle
-        cout << setw(200) << setfill('_') << "" << endl; //line
-
+        // Header section for the report card
+        cout << setw(200) << setfill('_') << "" << endl;  // Top line
+        cout << setfill(' ') << "|" << setw(113) << "\e[1mGovernment of Goa\e[0m" << setw(94) << "|" << endl; // Centered heading
+        cout << left << "|" << setw(199) << right << "|" << endl;  // Empty line
+        cout << setfill(' ') << left << "|" << setw(118) <<right<< "\e[1mGoa College Of Engineering\e[0m" << setw(89) << right << "|" << endl;  // College name
+        cout << setfill(' ') << "|" << setw(115) << "\e[1mFarmaguddi Ponda Goa\e[0m" << setw(92) << "|" << endl;  // College address
+        // cout << setw(200) << setfill('_') << "" << endl;  // Bottom line
+        cout<<"|"<<setw(199)<<setfill('_')<<right<<"|"<<endl;
         // Student details
-        cout << "|" << setw(6) << left << "\e[1mName: \e[0m" << setw(192) << left << studentName << "|" << endl; // free
-        cout << "|" << setw(13) << left << "\e[1mRoll Number: \e[0m" << setw(185) << left << rollNo << "|" << endl; // free
-        cout << "|" << setw(9) << left << "\e[1mProgram: \e[0m" << setw(189) << left << branch << right << "|" << endl; // free
-        cout << setw(200) << setfill('_') << "" << endl; // line
+        cout << "|" << setw(6) << left << "\e[1mName: \e[0m" << setw(192) <<setfill(' ')<< left << studentName << "|" << endl;  // Student name
+        cout << "|" << setw(13) << left << "\e[1mRoll Number: \e[0m" << setw(185) <<setfill(' ')<< left << rollNo << "|" << endl;  // Roll number
+        cout << "|" << setw(9) << left << "\e[1mProgram: \e[0m" << setw(189) <<setfill(' ')<< left << branch << "|" << endl;  // Branch/Program
+        // cout<<"|"<<setw(199)<<setfill('_')<<right<<"|"<<endl;
 
+        // Iterate over each semester to display results
         for (int semIdx = 0; semIdx < semesterCount; semIdx++) {
-            cout << setfill(' ') << "|" << setw(118) << "\e[1mExamination: " + semesters[semIdx].semesterName + "\e[0m" << setw(89) << "|" << endl; //text middle
-            cout << setw(200) << setfill('_') << "" << endl;
+            cout<<"|"<<setw(199)<<setfill('_')<<right<<"|"<<endl;
+            cout << setfill(' ') << "|" << setw(118) <<right<< "\e[1mExamination: " + semesters[semIdx].semesterName + "\e[0m" << setw(89) << "|" << endl;  // Semester title
+            cout<<"|"<<setw(199)<<setfill('-')<<right<<"|"<<endl;
 
             // Header row for subjects and marks
             cout.fill(' ');
-            cout << "|" << setw(17) << left << "Code" << "|" << setw(50) << left << "Course" << "|";
-            for (int i = 0; i < 3; i++)
-                cout << setw(15) << left << semesters[semIdx].subjects[0].type_of_marks[i] << "|";  // Theory, IT, Term Work
-            cout << setw(12) << left << "Total Marks" << "|";
-            cout << setw(12) << left << "Credits" << "|";
-            cout << endl;
-            cout << setw(200) << setfill('_') << "" << endl; // line
+            cout << "|" << setw(13) << left << "Code" 
+                << "|" << setw(53) << left << "Course" 
+                << "|" << setw(11) << "Credit"
+                << "|" << setw(11) << "Theory" 
+                << "|" << setw(9) << "IT"
+                << "|" << setw(13) << "Termwork"
+                << "|" << setw(15) << "Theory Total" 
+                << "|" << setw(15) << "Practical"
+                << "|" << setw(11) << "Oral" 
+                << "|" << setw(13) << "Total" 
+                << "|" << setw(10) << "Grade" 
+                << "|" << setw(13) << "Grade Point" << "|" << endl;
+            cout<<"|"<<setw(199)<<setfill('_')<<right<<"|"<<endl;  // Line separator
 
             // Displaying each subject's marks
             for (int subIdx = 0; subIdx < semesters[semIdx].subjectCount; subIdx++) {
                 const Subject& subject = semesters[semIdx].subjects[subIdx];
                 cout.fill(' ');
-                cout << "|" << setw(17) << left << subject.code << "|"
-                    << setw(50) << left << subject.name << "|";
-
-                // Display marks
-                for (int markIdx = 0; markIdx < 3; markIdx++) {
-                    cout << setw(7) << right << subject.course_mark[markIdx] << setw(8) << "" << "|";
-                }
-
-                // Display total marks obtained and credits
-                float total_obtained = subject.getTotalMarksObtained();
-                cout << setw(12) << right << total_obtained << "/" << subject.total_max_marks << "|";
-                cout << setw(12) << right << subject.credits << "|";
-                cout << endl;
-                cout << setw(200) << setfill('_') << "" << endl; // line
+                cout.precision(0);
+                cout << "|" << setw(13) << left << subject.code 
+                    << "|" << setw(53) << left << subject.name 
+                    << "|" << setw(11) << subject.credits
+                    << "|" << setw(11) << (subject.course_mark[0]>=0?to_string(subject.course_mark[0]):"NA") 
+                    << "|" << setw(9) << (subject.course_mark[1]>=0?to_string(subject.course_mark[1]):"NA")
+                    << "|" << setw(13) << (subject.course_mark[2]>=0?to_string(subject.course_mark[2]):"NA") // 
+                    << "|" << setw(15) << subject.course_mark[0] + subject.course_mark[1] + subject.course_mark[2]
+                    << "|" << setw(15) << (subject.course_mark[3]>=0?to_string(subject.course_mark[3]):"NA")
+                    << "|" << setw(11) << (subject.course_mark[4]>=0?to_string(subject.course_mark[4]):"NA")
+                    << "|" << setw(13) << subject.getTotalMarksObtained()
+                    << "|" << setw(10) << subject.grade
+                    << "|" << setw(13) << subject.GradePoint << "|" << endl;
+                cout<<"|"<<setw(199)<<setfill('_')<<right<<"|"<<endl;  // Line separator
             }
 
-            // Display earned credits, SGPA, and status
+            // Earned credits, SGPA, and status
             double sgpa = semesters[semIdx].calculateCGPA();
             cout.fill(' ');
-            cout << "|" << setw(30) << right << "Earned Credits: " << setw(10) << left << "CalculateCredits" // Placeholder for earned credits logic
+            cout << "|" << setw(30) << right << "Earned Credits: " << setw(10) << left << semesters[semIdx].totalcredits
                 << setw(30) << right << "SGPA: " << setw(10) << left << fixed << setprecision(2) << sgpa
-                << setw(30) << right << "Status: " << setw(10) << left << "Completed" << setw(72) << "" <<right<< "|" << endl;
-            cout << setw(200) << setfill('_') << "" << endl; // line
+                << setw(30) << right << "Status: " << setw(10) << left <<( sgpa > 4?"Pass":"Fail" )<< setw(79) << right << "|" << endl;
+            // cout << setw(200) << setfill('_') << "" << endl;  // Line separator
         }
-
-        // Overall CGPA calculation
         double overallCGPA = 0;
         for (int i = 0; i < semesterCount; i++) {
             overallCGPA += semesters[i].calculateCGPA();
         }
         overallCGPA /= semesterCount;
+        cout<<"|"<<setw(199)<<setfill('_')<<right<<"|"<<endl;
+        // Overall CGPA calculation
 
         cout << "\nOverall CGPA: " << fixed << setprecision(2) << overallCGPA << endl;
     }
+
 
     // Save data to binary file
     void saveToFile() const {
@@ -256,21 +308,23 @@ public:
         cin >> subjectIndex;
         subjectIndex--;
 
-        // Calculate the position to seek to (considering the size of student details and subjects)
-        streampos subjectPosition = sizeof(studentName) + sizeof(rollNo) + sizeof(branch) +
-                                    semesterIndex * sizeof(Semester) +
-                                    subjectIndex * sizeof(Subject);
-
-        // Move to the subject position
+        streampos subjectPosition=sizeof(studentName)+sizeof(rollNo)+sizeof(branch);
+        for(int i=0;i<semesterIndex;i++){
+            subjectPosition+=sizeof(semesters[i].semesterName)+sizeof(semesters[i].subjectCount);
+            for(int j=0;j<semesters[i].subjectCount;j++){
+                subjectPosition+=sizeof(Subject);
+            }
+        }
+        subjectPosition+=sizeof(semesters[semesterIndex].semesterName)+sizeof(semesters[semesterIndex].subjectCount);
+        for(int i=0;i<subjectIndex;i++){
+            subjectPosition+=sizeof(Subject);
+        }
         file.seekp(subjectPosition);
-
-        // Input new marks and write to the file
         semesters[semesterIndex].subjects[subjectIndex].input_marks();
-        file.write(reinterpret_cast<const char*>(&semesters[semesterIndex].subjects[subjectIndex]), sizeof(Subject));
-
-        cout << "Marks updated successfully!" << endl;
-
+        file.write(reinterpret_cast<const char*>(&semesters[semesterIndex].subjects[subjectIndex]),sizeof(Subject));
+        cout<<"Marks updated successfully!"<<endl;
         file.close();
+
     }
     void searchAndDisplayResult( string& rollNo) {
         string filename = rollNo + ".bin";
@@ -300,68 +354,33 @@ public:
         displayStudentDetails();
         file.close();
     }
-        // Append branch to the file
+        
+    // edit branch to the file, without using seekp
     void updateBranchInFile(string& rollNo) {
         string filename = rollNo + ".bin";
-
-        // Open the file in read/write mode (in and out), binary mode
         fstream file(filename, ios::in | ios::out | ios::binary);
-
-        // Check if file opens successfully
-        if (!file.is_open()) {
-            cout << "Error: File " << filename << " could not be opened!" << endl;
+        if (!file) {
+            cout << "Error opening file for editing!" << endl;
             return;
         }
-
-        // Reading the current details
-        string studentName, currentRollNo, branch;
-
-        // Read the length of the student name and then the name
-        size_t nameLength;
-        file.read(reinterpret_cast<char*>(&nameLength), sizeof(nameLength));
-        studentName.resize(nameLength);
-        file.read(&studentName[0], nameLength); // Read the student name
-
-        // Read the length of the roll number and then the roll number
-        size_t rollLength;
-        file.read(reinterpret_cast<char*>(&rollLength), sizeof(rollLength));
-        currentRollNo.resize(rollLength);
-        file.read(&currentRollNo[0], rollLength); // Read the roll number
-
-        // Read the length of the branch and then the branch
-        size_t branchLength;
-        file.read(reinterpret_cast<char*>(&branchLength), sizeof(branchLength));
-        branch.resize(branchLength);
-        file.read(&branch[0], branchLength); // Read the branch
-
-        // Display current branch
-        cout << "Current branch: " << branch << endl;
+        // Read student details from the file
+        file.read(reinterpret_cast<char*>(&studentName), sizeof(studentName));
+        file.read(reinterpret_cast<char*>(&rollNo), sizeof(rollNo));
+        file.read(reinterpret_cast<char*>(&branch), sizeof(branch));
 
         // Get new branch from user
-        string newBranch;
+        char* newBranch;
+        newBranch = new char[30];
         cout << "Enter the updated branch: ";
         cin.ignore();  // Clear the input buffer
-        getline(cin, newBranch);
+        cin.getline(newBranch,30);
 
-        // Move file pointer to the position of the branch to overwrite it
-        streampos branchPosition = sizeof(size_t) + nameLength + sizeof(size_t) + rollLength + sizeof(size_t);
-        file.seekp(branchPosition, ios::beg);  // Move to the branch position
-
-        // Write the length of the new branch and the new branch to the file
-        size_t newBranchLength = newBranch.length();
-        file.write(reinterpret_cast<const char*>(&newBranchLength), sizeof(newBranchLength)); // Write the length of the new branch
-        file.write(newBranch.c_str(), newBranchLength); // Write the new branch
-
-        // Ensure write is successful
-        if (!file) {
-            cout << "Error writing to file!" << endl;
-        } else {
-            cout << "Branch updated successfully!" << endl;
-        }
-
-        file.close();  // Close the file
+        // Write the new branch to the file
+        file.seekp(sizeof(studentName)+sizeof(rollNo),ios::beg);
+        file.write(reinterpret_cast<const char*>(&newBranch), sizeof(newBranch));
+        cout<<"Branch updated successfully!"<<endl;
+        file.close();        
     }
-
 };
 
 
@@ -369,9 +388,22 @@ int main() {
     StudentResult resultSystem;
     char choice;
     do {
-        cout << "\n1. Enter Result Details\n2. Edit Marks\n3. Append Branch\n4. Search Result\n0. Exit\nEnter your choice: ";
+        //make box for menu
+        cout<<endl;
+        cout<<"|"<<setfill('-')<<setw(51)<<right<<"|"<<endl;
+        cout<<"|"<<setfill(' ')<<setw(51)<<right<<"|"<<endl;
+        cout<<"|"<<setw(50)<<left<<"\e[1mStudent Result System\e[0m"<<setw(9)<<right<<"|"<<endl;
+        cout<<"|"<<setfill(' ')<<setw(51)<<right<<"|"<<endl;
+        cout<<"|"<<setw(50)<<left<<"1. Enter student details"<<setw(1)<<right<<"|"<<endl;
+        cout<<"|"<<setw(50)<<left<<"2. Edit marks"<<setw(1)<<right<<"|"<<endl;
+        cout<<"|"<<setw(50)<<left<<"3. Update branch"<<setw(1)<<right<<"|"<<endl;
+        cout<<"|"<<setw(50)<<left<<"4. Search and display result"<<setw(1)<<right<<"|"<<endl;
+        cout<<"|"<<setw(50)<<left<<"0. Exit"<<setw(1)<<right<<"|"<<endl;
+        cout<<"|"<<setfill(' ')<<setw(51)<<right<<"|"<<endl;
+        cout<<"|"<<setfill('-')<<setw(51)<<right<<"|"<<endl;
+        cout<<endl;
+        cout<<"Enter your choice: ";
         cin >> choice;
-
         string rollNo;
         switch (choice) {
             case '1':
@@ -401,7 +433,13 @@ int main() {
             default:
                 cout << "Invalid choice!" << endl;
         }
-    } while (choice != '5');
+        cout<<"\nPress Enter to cotninue...";
+        cin.ignore();
+        cin.get();
+
+        //clear screen
+        cout << "\033[2J\033[1;1H";
+    } while (1);
 
     return 0;
 }
